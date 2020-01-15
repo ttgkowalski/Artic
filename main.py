@@ -1,12 +1,17 @@
 from inputs import ouvir_microfone
 from output import output_speech
 
-output_speech("""Iniciando sessão de reconhecimento.
-              Diga-me 
-              <break time="300ms"/> qual o seu nome.""")
+output_speech("""Para qual apartamento você quer interfonar""")
 
-nome_cliente = ouvir_microfone()
+numero_apartamento = ouvir_microfone()
 
-output_speech("""Bom dia, 
-              <break time="300ms"/> {0}, 
-              <break time="300ms"/> como posso te ajudar?""".format(nome_cliente))
+output_speech("""Você disse: apartamento {0}, confirma?""".format(numero_apartamento))
+
+confirmacao = ouvir_microfone()
+
+if confirmacao == "sim":
+    output_speech("Confirmado")
+elif confirmacao == "não":
+    output_speech("Então, fale novamente.")
+else:
+    output_speech("Não entendi denovo, desisto.")

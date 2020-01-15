@@ -12,7 +12,7 @@ def ouvir_microfone():
         audio = microfone.listen(source)
         try:
             frase = microfone.recognize_google(audio,language='pt-BR')
-            cls()
+            
             print("Your last command: " + frase)
             if frase == "cancelar":
                 cls()
@@ -21,7 +21,7 @@ def ouvir_microfone():
             else:
                 print(frase)
                 cls()
-                return frase
+                return frase.lower()
                 
         except sr.UnknownValueError:
             print("Não entendi")
