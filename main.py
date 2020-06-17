@@ -1,17 +1,18 @@
-from inputs import ouvir_microfone
-from output import output_speech
+from config import API_KEY, API_URL
+from recogntion_system import Speech2Text, Text2Speech
 
-output_speech("""Para qual apartamento você quer interfonar""")
+def main():    
+    speech2text = Speech2Text()
+    text2speech = Text2Speech(API_KEY, API_URL)
 
-numero_apartamento = ouvir_microfone()
+    text = speech2text.listen_mic()
+    print("Comando por voz: %s"%text)
 
-output_speech("""Você disse: apartamento {0}, confirma?""".format(numero_apartamento))
+    text2speech.text2record_audio(text, 'teste.wav')
 
-confirmacao = ouvir_microfone()
 
-if confirmacao == "sim":
-    output_speech("Confirmado")
-elif confirmacao == "não":
-    output_speech("Então, fale novamente.")
-else:
-    output_speech("Não entendi denovo, desisto.")
+
+    
+
+if __name__ == "__main__":
+    main()
