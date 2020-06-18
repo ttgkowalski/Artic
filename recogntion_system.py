@@ -5,6 +5,7 @@ import timeit
 import pyaudio
 import wave
 from config import ANS
+from playsound import playsound
 
 class Speech2Text:
 
@@ -21,12 +22,11 @@ class Speech2Text:
         sample_format = pyaudio.paInt16  # 16 bits per sample
         channels = 2
         fs = 44100  # Record at 44100 samples per second
-        seconds = 5
+        seconds = 7
         filename = "swap/in_tmp_user.wav"
 
         p = pyaudio.PyAudio()  # Create an interface to PortAudio
-
-        print('Recording')
+        
         stream = p.open(format=sample_format,
                         channels=channels,
                         rate=fs,
@@ -35,6 +35,9 @@ class Speech2Text:
 
         frames = []  # Initialize array to store frames
 
+        print('Recording')
+        playsound("db_audio/ui-check.wav")
+        
         # Store data in chunks for 3 seconds
         for i in range(0, int(fs / chunk * seconds)):
             data = stream.read(chunk)
@@ -45,6 +48,7 @@ class Speech2Text:
         stream.close()
         # Terminate the PortAudio interface
         p.terminate()
+        print("Finalizando gravação...")
 
         # Save the recorded data as a WAV file
         wf = wave.open(filename, 'wb')
