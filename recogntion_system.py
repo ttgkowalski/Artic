@@ -27,7 +27,6 @@ class Speech2Text:
         p = pyaudio.PyAudio()  # Create an interface to PortAudio
 
         print('Recording')
-        inicio = timeit.default_timer()
         stream = p.open(format=sample_format,
                         channels=channels,
                         rate=fs,
@@ -46,37 +45,26 @@ class Speech2Text:
         stream.close()
         # Terminate the PortAudio interface
         p.terminate()
-        fim = timeit.default_timer()
-        print("Tempo para abrir microfone:", fim - inicio)
 
         # Save the recorded data as a WAV file
-        inicio = timeit.default_timer()
         wf = wave.open(filename, 'wb')
         wf.setnchannels(channels)
         wf.setsampwidth(p.get_sample_size(sample_format))
         wf.setframerate(fs)
         wf.writeframes(b''.join(frames))
         wf.close()
-        fim = timeit.default_timer()
-        print("Tempo para salvar o arquivo:", fim - inicio)
-        inicio = timeit.default_timer()
         os.system("python3 denoiser.py -i swap/in_tmp_user.wav -o swap/out_tmp_user.wav")
-        fim = timeit.default_timer()
-        print("Tempo para remover ruído", fim - inicio)
 
     def audio2text(self):
         with sr.AudioFile("swap/out_tmp_user.wav") as source:
             audio = self.recognizer.record(source)
 
         try:
-            inicio = timeit.default_timer()
-            self.recognizer.recognize_google(audio, language = 'pt-BR')
-            fim = timeit.default_timer()
-            print("Tempo de reconhecimento", fim - inicio)
+            success = self.recognizer.recognize_google(audio, language = 'pt-BR')
         except LookupError:
             print("Could not understand audio")
         
-        return self.recognizer.recognize_google(audio, language = 'pt-BR')
+        return self.recognizer.recognize_google(audio, language = 'pt-BR').lower()
                     
     def somalista(self, numeros):
         soma = 0
