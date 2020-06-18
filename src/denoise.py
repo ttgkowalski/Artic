@@ -2,9 +2,9 @@
 import sys
 import os
 import numpy
-#import pywt
-from .windowBundle import WindowBundle
-from .noiseProfiler import NoiseProfiler
+import pywt
+from src.windowBundle import WindowBundle
+from src.noiseProfiler import NoiseProfiler
 
 
 class Denoiser:
@@ -34,16 +34,16 @@ class Denoiser:
         self.wlevels = wlevels
         self.filterType = filterType
         self.method = method
-        print("Denoiser options: ")
-        print("a: " + str(a))
-        print("b: " + str(b))
-        print("c: " + str(c))
-        print("d: " + str(d))
-        print("akGrad: " + str(akGrad))
-        print("akOffset: " + str(akOffset))
-        print("filterType: " + str(filterType))
-        print("method: " + method)
-        print("wavelet: " + waveletName)
+        #print("Denoiser options: ")
+        #print("a: " + str(a))
+        #print("b: " + str(b))
+        #print("c: " + str(c))
+        #print("d: " + str(d))
+        #print("akGrad: " + str(akGrad))
+        #print("akOffset: " + str(akOffset))
+        #print("filterType: " + str(filterType))
+        #print("method: " + method)
+        #print("wavelet: " + waveletName)
 
     def padArray(self, srcArr, targetSize):
         targetArr = srcArr[:]
@@ -81,7 +81,6 @@ class Denoiser:
         numOfBands = len(XleafNodes)
         counter = 0;
         for node in XleafNodes:
-            print(str(round(counter/numOfBands*100)) + "%")
             bandAk = Ak[bandId]
             bandId += 1
             XbandData = X[node].data
@@ -109,7 +108,6 @@ class Denoiser:
         # print(XleafNodes)
         bandId = 0
         for node in range(nBands):
-            print(str(round(bandId/nBands*100)) + "%")
             bandAk = Ak[bandId]
             XbandData = X[node]
             NbandData = N[node]

@@ -5,11 +5,11 @@ import sys
 import os
 import numpy
 # import matplotlib.pyplot as plt
-import windowBundle
+import src.windowBundle as windowBundle
 import math
 import pywt
-import waveletHelper
-from linkedList import LinkedList
+import src.waveletHelper
+from src.linkedList import LinkedList
 
 
 class NoiseProfiler:
@@ -37,7 +37,7 @@ class NoiseProfiler:
         self.threshold = None
 
         self.extractWindows()
-        print("Noise profiler finished")
+        #print("Noise profiler finished")
 
     def drawOriginalVsNoiseAndSingal(self):
         self.threshold = self.extractRMSthresholdFromWindows(

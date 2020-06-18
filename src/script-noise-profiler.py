@@ -19,7 +19,7 @@ fileName = os.path.basename(args.file)
 # there
 os.chdir(filePath)
 
-print("trying to open " + args.file)
+#print("trying to open " + args.file)
 data, sampleRate = soundfile.read(fileName)
 
 # if it's stereo it will have 2 columns.. so, checking for number of columns and if there is
@@ -27,7 +27,7 @@ data, sampleRate = soundfile.read(fileName)
 if len(data.shape) > 1:
     data = data.T[0]
 
-print("Number of samples read: " + str(len(data)))
+#print("Number of samples read: " + str(len(data)))
 
 
 noiseProfiler = noiseProfiler.NoiseProfiler(data);

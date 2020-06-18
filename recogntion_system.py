@@ -1,13 +1,10 @@
 import speech_recognition as sr
 import os
-import sys
 import time
 import timeit
+import pyaudio
+import wave
 from config import ANS
-from src import *
-from src import denoise as dn
-from src import noiseProfiler as npf
-import soundfile
 
 class Speech2Text:
 
@@ -16,45 +13,71 @@ class Speech2Text:
         #self.recognizer.dynamic_energy_threshold = True
         #self.recognizer.non_speaking_duration
         #self.recognizer.pause_threshold = 0.7 #seconds
-        self.micro = sr.Microphone(sample_rate=44000)
-        print("Microfone iniciado com sucesso")
-
-
-    def denoisy(self, sound):
-        denoiser = dn.Denoiser()
-        data, sampleRate = soundfile.read(sound)
-        noiseProfile = npf.NoiseProfiler(data)
-        dataNoise = noiseProfile.getNoiseDataPredicted()
-        dataDenoised = denoiser.denoise(Xin=data, Nin=dataNoise)
-        return dataDenoised
+        #self.micro = sr.Microphone(sample_rate=44000)
+        #print("Microfone iniciado com sucesso")
     
-    def listen_mic(self):       
+    def listen_mic(self):
+        chunk = 1024  # Record in chunks of 1024 samples
+        sample_format = pyaudio.paInt16  # 16 bits per sample
+        channels = 2
+        fs = 44100  # Record at 44100 samples per second
+        seconds = 3
+        filename = "swap/in_tmp_user.wav"
+
+        p = pyaudio.PyAudio()  # Create an interface to PortAudio
+
+        print('Recording')
+        inicio = timeit.default_timer()
+        stream = p.open(format=sample_format,
+                        channels=channels,
+                        rate=fs,
+                        frames_per_buffer=chunk,
+                        input=True)
+
+        frames = []  # Initialize array to store frames
+
+        # Store data in chunks for 3 seconds
+        for i in range(0, int(fs / chunk * seconds)):
+            data = stream.read(chunk)
+            frames.append(data)
+
+        # Stop and close the stream 
+        stream.stop_stream()
+        stream.close()
+        # Terminate the PortAudio interface
+        p.terminate()
+        fim = timeit.default_timer()
+        print("Tempo para abrir microfone:", fim - inicio)
+
+        # Save the recorded data as a WAV file
+        inicio = timeit.default_timer()
+        wf = wave.open(filename, 'wb')
+        wf.setnchannels(channels)
+        wf.setsampwidth(p.get_sample_size(sample_format))
+        wf.setframerate(fs)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+        fim = timeit.default_timer()
+        print("Tempo para salvar o arquivo:", fim - inicio)
+        inicio = timeit.default_timer()
+        os.system("python3 denoiser.py -i swap/in_tmp_user.wav -o swap/out_tmp_user.wav")
+        fim = timeit.default_timer()
+        print("Tempo para remover ruído", fim - inicio)
+
+    def audio2text(self):
+        with sr.AudioFile("swap/out_tmp_user.wav") as source:
+            audio = self.recognizer.record(source)
+
+        try:
+            inicio = timeit.default_timer()
+            self.recognizer.recognize_google(audio, language = 'pt-BR')
+            fim = timeit.default_timer()
+            print("Tempo de reconhecimento", fim - inicio)
+        except LookupError:
+            print("Could not understand audio")
         
-        with self.micro as source:
-            self.recognizer.adjust_for_ambient_noise(source)
-            print("Microfone aberto e escutando")
-            audio = self.recognizer.listen(source, timeout=5) #timeout(sec) tempo que microfone ficara aberto até a primeira frase ser dita
-            with open("44k.wav", "wb") as f:
-                f.write(audio.get_wav_data())
-                self.denoised = self.denoisy(sound = "44k.wav")
-            #return self.audio2text(audio)
-            return self.denoised
-
-    def audio2text(self, audio):      
-            try:
-                frase = self.recognizer.recognize_google(audio,language='pt-BR')              
-                # if frase == "cancelar":
-                #     print("Sem problemas, até mais")
-                #     exit()
-                # else:
-                print(frase)
-                return frase.lower()
-
-            except sr.UnknownValueError:
-                frase = "Não entendi"
-                print(frase)
-                return frase.lower()
-            
+        return self.recognizer.recognize_google(audio, language = 'pt-BR')
+                    
     def somalista(self, numeros):
         soma = 0
         for i in numeros:
@@ -89,7 +112,7 @@ class Text2Speech:
         self.voice = 'pt-BR_IsabelaV3Voice'
         self.accept = 'audio/wav'
 
-    def text2record_audio(self, text, name_file = '{}.wav'.format(ctime(time())).replace(" ","").replace(":", ''), path="./db_audio/"):
+    def text2record_audio(self, text, name_file = '{}.wav'.format(ctime(time())).replace(" ","").replace(":", ''), path=""):
         with open(path + name_file, 'wb') as audio_file:
             audio_file.write(
                 self.text_to_speech.synthesize(

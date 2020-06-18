@@ -51,7 +51,7 @@ args.input = args.input.replace("'", "")
 filePath = os.path.dirname(args.input)
 fileName = os.path.basename(args.input)
 
-print("trying to open " + args.input)
+#print("trying to open " + args.input)
 data, sampleRate = soundfile.read(args.input)
 
 # if it's stereo it will have 2 columns.. so, checking for number of columns and if there is
@@ -59,7 +59,7 @@ data, sampleRate = soundfile.read(args.input)
 if len(data.shape) > 1:
     data = data.T[0]
 
-print("Number of samples read: " + str(len(data)))
+#print("Number of samples read: " + str(len(data)))
 
 denoiser = Denoiser(
     a=args.a,
@@ -102,10 +102,10 @@ outPath = os.path.dirname(args.output)
 if(outPath and not os.path.isdir(outPath)):
     os.makedirs(outPath,exist_ok=True)
 
-print("will write denoised file to " + args.output)
+#print("will write denoised file to " + args.output)
 soundfile.write(args.output, dataDenoised, sampleRate)
 
-print("OK")
+#print("OK")
 if(args.verbose):
     import sounddevice
     
