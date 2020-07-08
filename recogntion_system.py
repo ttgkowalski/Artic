@@ -1,74 +1,70 @@
-import speech_recognition as sr
+import src.speech_recognition as sr
 import os
 import time
-import timeit
+from timeit import default_timer as timer
 import pyaudio
 import wave
+from io import BytesIO
 from config import ANS
-from playsound import playsound
+import denoiser as dn
+import numpy as np
 
 class Speech2Text:
 
     def __init__(self):
         self.recognizer = sr.Recognizer()
+        self.resultados = []
         #self.recognizer.dynamic_energy_threshold = True
         #self.recognizer.non_speaking_duration
         #self.recognizer.pause_threshold = 0.7 #seconds
-        #self.micro = sr.Microphone(sample_rate=44000)
-        #print("Microfone iniciado com sucesso")
+        start = timer()
+        self.micro = sr.Microphone(sample_rate=44000)
+        end = timer()
+        self.resultados.append(end - start)
+        self.instanciar_mic = end - start
+        print("Microfone iniciado com sucesso")
     
     def listen_mic(self):
-        chunk = 1024  # Record in chunks of 1024 samples
-        sample_format = pyaudio.paInt16  # 16 bits per sample
-        channels = 2
-        fs = 44100  # Record at 44100 samples per second
-        seconds = 7
-        filename = "swap/in_tmp_user.wav"
-
-        p = pyaudio.PyAudio()  # Create an interface to PortAudio
+        with self.micro as source:
+            print('Ajustando para ambiente')
+            start = timer()
+            self.recognizer.adjust_for_ambient_noise(source)
+            end = timer()
+            self.resultados.append(end - start)
+            self.ajustar_env = end - start
+            print("Escutando...")
+            audio = self.recognizer.listen(source)
+            self.wav_data = audio.get_wav_data()
+            start = timer()
+            self.denoised, self.sampleRate = dn.denoise_audio(audio_data=BytesIO(self.wav_data))
+            end = timer()
+            self.resultados.append(end - start)
+            self.denoise_time = end - start
         
-        stream = p.open(format=sample_format,
-                        channels=channels,
-                        rate=fs,
-                        frames_per_buffer=chunk,
-                        input=True)
-
-        frames = []  # Initialize array to store frames
-
-        print('Recording')
-        playsound("db_audio/ui-check.wav")
+    def retun_values(self):
+        print("Instanciar microfone: {}".format(self.instanciar_mic))
+        print("Ajustar ao ambiente: {}".format(self.ajustar_env))
+        print("Remover ruído: {}".format(self.denoise_time))
+        print("Reconhecer: {}\n".format(self.reconhecer))
+        total = self.somalista(self.resultados)
+        print("Total: {}".format(total))
         
-        # Store data in chunks for 3 seconds
-        for i in range(0, int(fs / chunk * seconds)):
-            data = stream.read(chunk)
-            frames.append(data)
-
-        # Stop and close the stream 
-        stream.stop_stream()
-        stream.close()
-        # Terminate the PortAudio interface
-        p.terminate()
-        print("Finalizando gravação...")
-
-        # Save the recorded data as a WAV file
-        wf = wave.open(filename, 'wb')
-        wf.setnchannels(channels)
-        wf.setsampwidth(p.get_sample_size(sample_format))
-        wf.setframerate(fs)
-        wf.writeframes(b''.join(frames))
-        wf.close()
-        os.system("python3 denoiser.py -i swap/in_tmp_user.wav -o swap/out_tmp_user.wav")
 
     def audio2text(self):
+        start = timer()
         with sr.AudioFile("swap/out_tmp_user.wav") as source:
             audio = self.recognizer.record(source)
+            end = timer()
+            self.resultados.append(end - start)
+            self.reconhecer = end - start
+            return self.recognizer.recognize_google(sr.AudioData(np.int16(self.denoised/np.max(np.abs(self.denoised)) * 32767).tobytes(), self.sampleRate, 2), language = 'pt-BR').lower()
 
         try:
-            success = self.recognizer.recognize_google(audio, language = 'pt-BR')
+            return self.recognizer.recognize_google(audio, language = 'pt-BR').lower()
         except LookupError:
             print("Could not understand audio")
         
-        return self.recognizer.recognize_google(audio, language = 'pt-BR').lower()
+        
                     
     def somalista(self, numeros):
         soma = 0
